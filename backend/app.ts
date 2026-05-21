@@ -3,12 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-// Routes (to be implemented in modules)
-// import authRoutes from './modules/auth/auth.routes';
-// import productRoutes from './modules/products/product.routes';
-// import orderRoutes from './modules/orders/order.routes';
-// import paymentRoutes from './modules/payments/payment.routes';
-// import reportRoutes from './modules/reports/report.routes';
+// Routes
+import authRoutes from './modules/auth/auth.routes';
 
 const app = express();
 
@@ -29,13 +25,9 @@ app.get('/health', (req, res) => {
 });
 
 // =====================
-// API ROUTES (MODULE BINDING LATER)
+// MODULE ROUTES
 // =====================
-// app.use('/auth', authRoutes);
-// app.use('/products', productRoutes);
-// app.use('/orders', orderRoutes);
-// app.use('/payments', paymentRoutes);
-// app.use('/reports', reportRoutes);
+app.use('/auth', authRoutes);
 
 // =====================
 // GLOBAL ERROR HANDLER
