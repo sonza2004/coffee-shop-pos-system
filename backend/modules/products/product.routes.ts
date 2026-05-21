@@ -1,51 +1,47 @@
-import { Router } from 'express';
-import { authenticate, authorize } from '../../middlewares/auth.middleware';
+import express from 'express';
+import { authMiddleware } from '../../middlewares/auth.middleware';
+import { requireRole } from '../../middlewares/role.middleware';
+import {
+  getProductsService,
+  createProductService,
+  updateProductService
+} from './product.service';
 
-const router = Router();
+const router = express.Router();
 
-// =====================
-// GET ALL PRODUCTS
-// =====================
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    // TODO: fetch active products from DB
-    return res.json({ message: 'list products placeholder' });
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    const products = await getProductsService();
+    res.json({ data: products });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
 
-// =====================
-// CREATE PRODUCT (ADMIN ONLY)
-// =====================
-router.post('/', authenticate, authorize(['admin']), async (req, res) => {
+router.post('/', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { name, price, stockQty } = req.body;
 
-    // TODO: create product in DB
-    return res.json({
-      message: 'create product placeholder',
-      data: { name, price, stockQty }
-    });
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    if (!name || price == null || stockQty == null) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+
+    const product = await createProductService({ name, price, stockQty });
+
+    res.json({ data: product });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create product' });
   }
 });
 
-// =====================
-// UPDATE PRODUCT (ADMIN ONLY)
-// =====================
-router.patch('/:id', authenticate, authorize(['admin']), async (req, res) => {
+router.patch('/:id', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
+    const updated = await updateProductService(id, req.body);
 
-    // TODO: update product
-    return res.json({
-      message: 'update product placeholder',
-      id
-    });
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    res.json({ data: updated });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update product' });
   }
 });
 
