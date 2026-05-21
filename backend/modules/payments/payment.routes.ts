@@ -1,60 +1,50 @@
-import { Router } from 'express';
-import { authenticate, authorize } from '../../middlewares/auth.middleware';
-import { PaymentService } from '../../services/payment.service';
+import express from 'express';
+import { authMiddleware } from '../../middlewares/auth.middleware';
+import { requireRole } from '../../middlewares/role.middleware';
+import {
+  approvePaymentService,
+  rejectPaymentService
+} from '../../services/payment.service';
 
-const router = Router();
+const router = express.Router();
 
 // =====================
-// UPLOAD PAYMENT SLIP
+// POST /payments/:id/approve
 // =====================
-router.post('/slip', authenticate, async (req, res) => {
+router.post('/:id/approve', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
-    const { orderId, imageUrl } = req.body;
+    const { id } = req.params;
 
-    const slip = await PaymentService.uploadSlip(orderId, imageUrl);
+    const result = await approvePaymentService(id);
 
-    return res.status(201).json({
-      message: 'slip uploaded',
-      data: slip
-    });
+    res.json({ data: result });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    console.error('[PAYMENT_APPROVE_ERROR]', err);
+
+    res.status(500).json({
+      error: 'Failed to approve payment',
+      code: 'PAYMENT_APPROVE_ERROR'
+    });
   }
 });
 
 // =====================
-// APPROVE PAYMENT
+// POST /payments/:id/reject
 // =====================
-router.post('/:id/approve', authenticate, authorize(['admin']), async (req, res) => {
+router.post('/:id/reject', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await PaymentService.approvePayment(id);
+    const result = await rejectPaymentService(id);
 
-    return res.json({
-      message: 'payment approved',
-      data: result
-    });
+    res.json({ data: result });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
-  }
-});
+    console.error('[PAYMENT_REJECT_ERROR]', err);
 
-// =====================
-// REJECT PAYMENT
-// =====================
-router.post('/:id/reject', authenticate, authorize(['admin']), async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await PaymentService.rejectPayment(id);
-
-    return res.json({
-      message: 'payment rejected',
-      data: result
+    res.status(500).json({
+      error: 'Failed to reject payment',
+      code: 'PAYMENT_REJECT_ERROR'
     });
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
   }
 });
 
