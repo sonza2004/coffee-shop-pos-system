@@ -28,7 +28,9 @@ export default function Products() {
     fetchProducts();
   }, []);
 
-  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+  const getQty = (productId: string) => {
+    return cart.find((c) => c.product.id === productId)?.qty || 0;
+  };
 
   if (loading) {
     return <div className="page">Loading products...</div>;
@@ -38,23 +40,24 @@ export default function Products() {
     <div className="page">
       <div className="header">
         <h1>☕ Products</h1>
-        <div className="cart-indicator">Cart: {totalItems}</div>
       </div>
 
-      <div className="grid">
-        <div className="product-list">
-          {products.map((p) => (
-            <div key={p.id} className="card">
-              <div className="name">{p.name}</div>
-              <div className="price">฿{p.price}</div>
-              <div className="stock">Stock: {p.stockQty}</div>
+      <div className="product-list">
+        {products.map((p) => (
+          <div key={p.id} className="card">
+            <div className="name">{p.name}</div>
+            <div className="price">฿{p.price}</div>
+            <div className="stock">Stock: {p.stockQty}</div>
 
+            <div className="controls">
               <button onClick={() => addToCart(p)}>
-                Add
+                + Add
               </button>
+
+              <div className="qty">In cart: {getQty(p.id)}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       <style>{`
@@ -66,22 +69,7 @@ export default function Products() {
         }
 
         .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           margin-bottom: 16px;
-        }
-
-        .cart-indicator {
-          padding: 6px 10px;
-          border: 2px solid #3b2f2f;
-          background: #fff7ed;
-        }
-
-        .grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 16px;
         }
 
         .product-list {
@@ -105,12 +93,22 @@ export default function Products() {
           color: #7a4e2d;
         }
 
+        .controls {
+          margin-top: 8px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
         button {
-          margin-top: 6px;
           padding: 6px;
           border: 2px solid #3b2f2f;
           background: #d9a066;
           cursor: pointer;
+        }
+
+        .qty {
+          font-size: 12px;
         }
       `}</style>
     </div>
