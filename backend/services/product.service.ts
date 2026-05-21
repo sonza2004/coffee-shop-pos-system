@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { AuditService } from './audit.service';
 
 export class ProductService {
   static async getAllProducts() {
@@ -13,17 +14,47 @@ export class ProductService {
     });
   }
 
-  static async createProduct(data: { name: string; price: number; stockQty: number }) {
-    return prisma.product.create({
-      data
+  static async createProduct(data: { name: string; price: number; stockQty: number; userId?: string }) {
+    const product = await prisma.product.create({
+      data: {
+        name: data.name,
+        price: data.price,
+        stockQty: data.stockQty
+      }
     });
+
+    await AuditService.log({
+      action: 'PRODUCT_CREATED',
+      userId: data.userId,
+      refId: product.id,
+      meta: data
+    });
+
+    return product;
   }
 
-  static async updateProduct(id: string, data: Partial<{ name: string; price: number; stockQty: number; isActive: boolean }>) {
-    return prisma.product.update({
+  static async updateProduct(
+    id: string,
+    data: Partial<{ name: string; price: number; stockQty: number; isActive: boolean }> & { userId?: string }
+  ) {
+    const product = await prisma.product.update({
       where: { id },
-      data
+      data: {
+        name: data.name,
+        price: data.price,
+        stockQty: data.stockQty,
+        isActive: data.isActive
+      }
     });
+
+    await AuditService.log({
+      action: 'PRODUCT_UPDATED',
+      userId: data.userId,
+      refId: id,
+      meta: data
+    });
+
+    return product;
   }
 
   static async decreaseStock(productId: string, qty: number) {
