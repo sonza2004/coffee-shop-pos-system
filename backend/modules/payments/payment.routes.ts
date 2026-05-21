@@ -9,16 +9,24 @@ import prisma from '../../config/prisma';
 
 const router = express.Router();
 
-// =====================
-// POST /payments/slip
-// cashier uploads slip
-// =====================
 router.post('/slip', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { orderId, imageUrl } = req.body;
 
     if (!orderId || !imageUrl) {
       return res.status(400).json({ error: 'Missing fields', code: 'VALIDATION_ERROR' });
+    }
+
+    // Prevent duplicate slip per order
+    const existingSlip = await prisma.paymentSlip.findFirst({
+      where: { orderId }
+    });
+
+    if (existingSlip) {
+      return res.status(400).json({
+        error: 'Payment slip already exists for this order',
+        code: 'DUPLICATE_SLIP'
+      });
     }
 
     const slip = await prisma.paymentSlip.create({
@@ -37,9 +45,6 @@ router.post('/slip', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// =====================
-// POST /payments/:id/approve
-// =====================
 router.post('/:id/approve', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -50,9 +55,6 @@ router.post('/:id/approve', authMiddleware, requireRole('admin'), async (req, re
   }
 });
 
-// =====================
-// POST /payments/:id/reject
-// =====================
 router.post('/:id/reject', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
