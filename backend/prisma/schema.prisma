@@ -21,7 +21,6 @@ model User {
   orders       Order[]
 }
 
-
 enum Role {
   admin
   cashier
@@ -56,7 +55,6 @@ model Order {
   items       OrderItem[]
   paymentSlip PaymentSlip?
 }
-
 
 enum OrderStatus {
   pending
