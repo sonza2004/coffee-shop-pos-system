@@ -27,14 +27,14 @@ async function main() {
   })
 
   const products = [
-    { name: 'Espresso',         price: 50,  stock: 100 },
-    { name: 'Latte',            price: 70,  stock: 100 },
-    { name: 'Cappuccino',       price: 80,  stock: 100 },
-    { name: 'Americano',        price: 60,  stock: 100 },
-    { name: 'Mocha',            price: 85,  stock: 100 },
-    { name: 'Croissant',        price: 45,  stock:  50 },
-    { name: 'Blueberry Muffin', price: 55,  stock:  50 },
-    { name: 'Cheese Cake',      price: 90,  stock:  30 },
+    { name: 'Espresso',         price: 50,  stockQty: 100 },
+    { name: 'Latte',            price: 70,  stockQty: 100 },
+    { name: 'Cappuccino',       price: 80,  stockQty: 100 },
+    { name: 'Americano',        price: 60,  stockQty: 100 },
+    { name: 'Mocha',            price: 85,  stockQty: 100 },
+    { name: 'Croissant',        price: 45,  stockQty:  50 },
+    { name: 'Blueberry Muffin', price: 55,  stockQty:  50 },
+    { name: 'Cheese Cake',      price: 90,  stockQty:  30 },
   ]
 
   for (const p of products) {
