@@ -1,4 +1,6 @@
-import prisma from '../../config/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function createOrderService(userId: string, items: { productId: string; qty: number }[]) {
   return prisma.$transaction(async (tx) => {
