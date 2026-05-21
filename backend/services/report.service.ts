@@ -12,14 +12,14 @@ export async function getDailyReportService() {
       }
     },
     include: {
-      orderItems: true
+      items: true
     }
   });
 
   const totalOrders = orders.length;
 
   const totalSales = orders.reduce((sum, order) => {
-    const orderTotal = order.orderItems.reduce((itemSum, item) => {
+    const orderTotal = order.items.reduce((itemSum, item) => {
       return itemSum + (item.price * item.qty);
     }, 0);
     return sum + orderTotal;
