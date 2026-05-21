@@ -1,13 +1,14 @@
 import express from 'express';
 import { authMiddleware } from '../../middlewares/auth.middleware';
+import { requireRole } from '../../middlewares/role.middleware';
 import { getDailyReportService } from '../../services/report.service';
 
 const router = express.Router();
 
 // =====================
-// GET /reports/daily
+// GET /reports/daily (owner only)
 // =====================
-router.get('/daily', authMiddleware, async (req, res) => {
+router.get('/daily', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const report = await getDailyReportService();
 
