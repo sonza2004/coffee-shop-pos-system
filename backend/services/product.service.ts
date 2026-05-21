@@ -57,27 +57,28 @@ export class ProductService {
     return product;
   }
 
+  // =====================
+  // ATOMIC STOCK OPERATION (NO TRANSACTION OWNERSHIP)
+  // =====================
   static async decreaseStock(productId: string, qty: number) {
-    return prisma.$transaction(async (tx) => {
-      const product = await tx.product.update({
-        where: { id: productId },
-        data: {
-          stockQty: {
-            decrement: qty
-          }
+    const product = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        stockQty: {
+          decrement: qty
         }
-      });
-
-      await AuditService.log({
-        action: 'STOCK_DEDUCTED',
-        refId: productId,
-        meta: {
-          qty,
-          remainingStock: product.stockQty
-        }
-      });
-
-      return product;
+      }
     });
+
+    await AuditService.log({
+      action: 'STOCK_DEDUCTED',
+      refId: productId,
+      meta: {
+        qty,
+        remainingStock: product.stockQty
+      }
+    });
+
+    return product;
   }
 }
