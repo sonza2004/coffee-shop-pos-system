@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middlewares/auth.middleware';
+import prisma from '../../config/prisma';
 
 const router = Router();
 
@@ -8,18 +9,40 @@ const router = Router();
 // =====================
 router.get('/daily', authenticate, authorize(['admin', 'owner']), async (req, res) => {
   try {
-    const { date } = req.query;
+    const date = req.query.date ? new Date(req.query.date as string) : new Date();
 
-    // TODO:
-    // - aggregate orders by date
-    // - sum total sales (only paid orders)
-    // - count total orders
-    // - compute net revenue
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+
+    const orders = await prisma.order.findMany({
+      where: {
+        status: 'paid',
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      },
+      include: {
+        items: true
+      }
+    });
+
+    const totalOrders = orders.length;
+
+    const totalSales = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    const netRevenue = totalSales; // no tax/fee model yet
 
     return res.json({
-      message: 'daily report placeholder',
-      date
+      date: start.toISOString().split('T')[0],
+      totalOrders,
+      totalSales,
+      netRevenue
     });
+
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
