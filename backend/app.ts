@@ -6,6 +6,7 @@ import morgan from 'morgan';
 // Routes
 import authRoutes from './modules/auth/auth.routes';
 import productRoutes from './modules/products/product.routes';
+import orderRoutes from './modules/orders/order.routes';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 // =====================
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
+app.use('/orders', orderRoutes);
 
 // =====================
 // GLOBAL ERROR HANDLER
