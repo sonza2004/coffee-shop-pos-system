@@ -1,31 +1,28 @@
 import prisma from '../config/prisma';
 
-export class ReportService {
-  static async getDailyReport(date: Date) {
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
+export async function getDailyReportService() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
-
-    const orders = await prisma.order.findMany({
-      where: {
-        status: 'paid',
-        createdAt: {
-          gte: start,
-          lte: end
-        }
+  const orders = await prisma.order.findMany({
+    where: {
+      status: 'paid',
+      createdAt: {
+        gte: today
       }
-    });
+    }
+  });
 
-    const totalOrders = orders.length;
-    const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalOrders = orders.length;
 
-    return {
-      date: start.toISOString().split('T')[0],
-      totalOrders,
-      totalSales,
-      netRevenue: totalSales
-    };
-  }
+  const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+  const netRevenue = totalSales;
+
+  return {
+    date: today,
+    totalOrders,
+    totalSales,
+    netRevenue
+  };
 }
