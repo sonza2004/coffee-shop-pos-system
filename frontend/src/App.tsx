@@ -6,10 +6,11 @@ import PaymentSlipUpload from "./pages/PaymentSlipUpload";
 import AdminDashboard from "./pages/AdminDashboard";
 import FinancialReport from "./pages/FinancialReport";
 import { CartProvider } from "./context/CartContext";
+import { isAuthenticated, hasRole, getRole } from "./utils/auth";
 
 export default function App() {
   const [route, setRoute] = useState<string>(() => {
-    return localStorage.getItem("token") ? "/products" : "/login";
+    return isAuthenticated() ? "/products" : "/login";
   });
 
   const navigate = (path: string) => {
@@ -18,21 +19,29 @@ export default function App() {
   };
 
   const renderPage = () => {
+    if (!isAuthenticated()) return <Login />;
+
     switch (route) {
       case "/login":
         return <Login />;
+
       case "/products":
         return <Products />;
+
       case "/cart":
         return <Cart />;
+
       case "/upload":
         return <PaymentSlipUpload />;
+
       case "/admin":
-        return <AdminDashboard />;
+        return hasRole(["admin"]) ? <AdminDashboard /> : <div>Access Denied</div>;
+
       case "/report":
-        return <FinancialReport />;
+        return hasRole(["owner", "admin"]) ? <FinancialReport /> : <div>Access Denied</div>;
+
       default:
-        return <Login />;
+        return <Products />;
     }
   };
 
@@ -43,11 +52,19 @@ export default function App() {
           <button onClick={() => navigate("/products")}>Products</button>
           <button onClick={() => navigate("/cart")}>Cart</button>
           <button onClick={() => navigate("/upload")}>Upload</button>
-          <button onClick={() => navigate("/admin")}>Admin</button>
-          <button onClick={() => navigate("/report")}>Report</button>
+
+          {hasRole(["admin"]) && (
+            <button onClick={() => navigate("/admin")}>Admin</button>
+          )}
+
+          {hasRole(["admin", "owner"]) && (
+            <button onClick={() => navigate("/report")}>Report</button>
+          )}
+
           <button
             onClick={() => {
               localStorage.removeItem("token");
+              localStorage.removeItem("user");
               navigate("/login");
             }}
           >
