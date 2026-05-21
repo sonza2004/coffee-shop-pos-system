@@ -8,6 +8,7 @@ import authRoutes from './modules/auth/auth.routes';
 import productRoutes from './modules/products/product.routes';
 import orderRoutes from './modules/orders/order.routes';
 import paymentRoutes from './modules/payments/payment.routes';
+import reportRoutes from './modules/reports/report.routes';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/payments', paymentRoutes);
+app.use('/reports', reportRoutes);
 
 // =====================
 // GLOBAL ERROR HANDLER
