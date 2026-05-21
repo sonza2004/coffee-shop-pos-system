@@ -8,12 +8,18 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'email and password required', code: 'VALIDATION_ERROR' });
+      return res.status(400).json({
+        error: 'email and password required',
+        code: 'VALIDATION_ERROR'
+      });
     }
 
     const result = await loginService(email, password);
 
-    return res.json({ data: result });
+    return res.json({
+      token: result.token,
+      user: result.user
+    });
   } catch (err: any) {
     console.error('[AUTH_LOGIN_ERROR]', err);
 
