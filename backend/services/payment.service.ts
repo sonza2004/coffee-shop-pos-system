@@ -11,14 +11,20 @@ export async function approvePaymentService(paymentId: string) {
       throw new Error('Payment not found');
     }
 
-    if (payment.status === 'approved') {
-      throw new Error('Payment already approved');
-    }
-
-    const updatedPayment = await tx.paymentSlip.update({
-      where: { id: paymentId },
-      data: { status: 'approved' }
+    // ATOMIC GUARD: prevent double approval under concurrency
+    const updatedPayment = await tx.paymentSlip.updateMany({
+      where: {
+        id: paymentId,
+        status: 'pending'
+      },
+      data: {
+        status: 'approved'
+      }
     });
+
+    if (updatedPayment.count === 0) {
+      throw new Error('Payment already processed');
+    }
 
     await tx.order.update({
       where: { id: payment.orderId },
@@ -71,7 +77,7 @@ export async function approvePaymentService(paymentId: string) {
       }
     });
 
-    return updatedPayment;
+    return { success: true, paymentId };
   });
 }
 
