@@ -1,44 +1,48 @@
-import { Router } from 'express';
-import { authenticate } from '../../middlewares/auth.middleware';
+import express from 'express';
+import { authMiddleware, AuthRequest } from '../../middlewares/auth.middleware';
+import { createOrderService, getOrderByIdService } from './order.service';
 
-const router = Router();
+const router = express.Router();
 
 // =====================
-// CREATE ORDER
+// POST /orders
 // =====================
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { items } = req.body;
 
-    // items: [{ productId, qty }]
-    // TODO:
-    // 1. validate products
-    // 2. calculate total
-    // 3. create order + order items
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({ error: 'Invalid items', code: 'VALIDATION_ERROR' });
+    }
 
-    return res.status(201).json({
-      message: 'create order placeholder',
-      items
-    });
+    const userId = req.user.userId;
+
+    const order = await createOrderService(userId, items);
+
+    return res.json({ data: order });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    console.error('[ORDER_CREATE_ERROR]', err);
+
+    return res.status(500).json({ error: 'Failed to create order', code: 'ORDER_ERROR' });
   }
 });
 
 // =====================
-// GET ORDER BY ID
+// GET /orders/:id
 // =====================
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: fetch order with items
-    return res.json({
-      message: 'get order placeholder',
-      id
-    });
+    const order = await getOrderByIdService(id);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found', code: 'NOT_FOUND' });
+    }
+
+    return res.json({ data: order });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ error: 'Failed to fetch order', code: 'ORDER_ERROR' });
   }
 });
 
