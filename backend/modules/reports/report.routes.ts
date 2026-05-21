@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middlewares/auth.middleware';
-import prisma from '../../config/prisma';
+import { ReportService } from '../../services/report.service';
 
 const router = Router();
 
@@ -11,38 +11,9 @@ router.get('/daily', authenticate, authorize(['admin', 'owner']), async (req, re
   try {
     const date = req.query.date ? new Date(req.query.date as string) : new Date();
 
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
+    const report = await ReportService.getDailyReport(date);
 
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
-
-    const orders = await prisma.order.findMany({
-      where: {
-        status: 'paid',
-        createdAt: {
-          gte: start,
-          lte: end
-        }
-      },
-      include: {
-        items: true
-      }
-    });
-
-    const totalOrders = orders.length;
-
-    const totalSales = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-
-    const netRevenue = totalSales; // no tax/fee model yet
-
-    return res.json({
-      date: start.toISOString().split('T')[0],
-      totalOrders,
-      totalSales,
-      netRevenue
-    });
-
+    return res.json(report);
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
   }
