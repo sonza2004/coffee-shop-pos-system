@@ -1,12 +1,41 @@
 import express from 'express';
-import { authMiddleware } from '../../middlewares/auth.middleware';
+import { authMiddleware, AuthRequest } from '../../middlewares/auth.middleware';
 import { requireRole } from '../../middlewares/role.middleware';
 import {
   approvePaymentService,
   rejectPaymentService
 } from '../../services/payment.service';
+import prisma from '../../config/prisma';
 
 const router = express.Router();
+
+// =====================
+// POST /payments/slip
+// cashier uploads slip
+// =====================
+router.post('/slip', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { orderId, imageUrl } = req.body;
+
+    if (!orderId || !imageUrl) {
+      return res.status(400).json({ error: 'Missing fields', code: 'VALIDATION_ERROR' });
+    }
+
+    const slip = await prisma.paymentSlip.create({
+      data: {
+        orderId,
+        imageUrl,
+        status: 'pending'
+      }
+    });
+
+    res.json({ data: slip });
+  } catch (err: any) {
+    console.error('[PAYMENT_SLIP_ERROR]', err);
+
+    res.status(500).json({ error: 'Failed to upload slip', code: 'SLIP_ERROR' });
+  }
+});
 
 // =====================
 // POST /payments/:id/approve
@@ -14,17 +43,10 @@ const router = express.Router();
 router.post('/:id/approve', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-
     const result = await approvePaymentService(id);
-
     res.json({ data: result });
   } catch (err: any) {
-    console.error('[PAYMENT_APPROVE_ERROR]', err);
-
-    res.status(500).json({
-      error: 'Failed to approve payment',
-      code: 'PAYMENT_APPROVE_ERROR'
-    });
+    res.status(500).json({ error: 'Failed to approve payment', code: 'PAYMENT_APPROVE_ERROR' });
   }
 });
 
@@ -34,17 +56,10 @@ router.post('/:id/approve', authMiddleware, requireRole('admin'), async (req, re
 router.post('/:id/reject', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-
     const result = await rejectPaymentService(id);
-
     res.json({ data: result });
   } catch (err: any) {
-    console.error('[PAYMENT_REJECT_ERROR]', err);
-
-    res.status(500).json({
-      error: 'Failed to reject payment',
-      code: 'PAYMENT_REJECT_ERROR'
-    });
+    res.status(500).json({ error: 'Failed to reject payment', code: 'PAYMENT_REJECT_ERROR' });
   }
 });
 
