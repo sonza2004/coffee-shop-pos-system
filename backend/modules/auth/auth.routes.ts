@@ -1,25 +1,26 @@
-import { Router } from 'express';
+import express from 'express';
+import { loginService } from './auth.service';
 
-const router = Router();
+const router = express.Router();
 
-// =====================
-// LOGIN
-// =====================
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // TODO: implement service layer authentication
-    // - validate user
-    // - compare password hash
-    // - issue JWT
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password required', code: 'VALIDATION_ERROR' });
+    }
 
-    return res.status(200).json({
-      message: 'login endpoint placeholder',
-      email
-    });
+    const result = await loginService(email, password);
+
+    return res.json({ data: result });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    console.error('[AUTH_LOGIN_ERROR]', err);
+
+    return res.status(err.status || 500).json({
+      error: err.message || 'Internal Server Error',
+      code: 'AUTH_ERROR'
+    });
   }
 });
 
