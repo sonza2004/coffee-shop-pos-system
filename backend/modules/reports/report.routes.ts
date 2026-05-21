@@ -1,21 +1,24 @@
-import { Router } from 'express';
-import { authenticate, authorize } from '../../middlewares/auth.middleware';
-import { ReportService } from '../../services/report.service';
+import express from 'express';
+import { authMiddleware } from '../../middlewares/auth.middleware';
+import { getDailyReportService } from '../../services/report.service';
 
-const router = Router();
+const router = express.Router();
 
 // =====================
-// DAILY REPORT
+// GET /reports/daily
 // =====================
-router.get('/daily', authenticate, authorize(['admin', 'owner']), async (req, res) => {
+router.get('/daily', authMiddleware, async (req, res) => {
   try {
-    const date = req.query.date ? new Date(req.query.date as string) : new Date();
+    const report = await getDailyReportService();
 
-    const report = await ReportService.getDailyReport(date);
-
-    return res.json(report);
+    res.json({ data: report });
   } catch (err: any) {
-    return res.status(500).json({ message: err.message });
+    console.error('[REPORT_DAILY_ERROR]', err);
+
+    res.status(500).json({
+      error: 'Failed to fetch report',
+      code: 'REPORT_ERROR'
+    });
   }
 });
 
