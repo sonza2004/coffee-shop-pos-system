@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { AuditService } from './audit.service';
 
 export interface CreateOrderItemInput {
   productId: string;
@@ -55,6 +56,19 @@ export class OrderService {
       },
       include: {
         items: true
+      }
+    });
+
+    // =====================
+    // AUDIT LOG
+    // =====================
+    await AuditService.log({
+      action: 'ORDER_CREATED',
+      userId: data.userId,
+      refId: order.id,
+      meta: {
+        totalAmount,
+        itemCount: data.items.length
       }
     });
 
