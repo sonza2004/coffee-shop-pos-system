@@ -10,12 +10,20 @@ export async function getDailyReportService() {
       createdAt: {
         gte: today
       }
+    },
+    include: {
+      orderItems: true
     }
   });
 
   const totalOrders = orders.length;
 
-  const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalSales = orders.reduce((sum, order) => {
+    const orderTotal = order.orderItems.reduce((itemSum, item) => {
+      return itemSum + (item.price * item.qty);
+    }, 0);
+    return sum + orderTotal;
+  }, 0);
 
   const netRevenue = totalSales;
 
