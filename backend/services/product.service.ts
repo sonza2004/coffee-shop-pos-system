@@ -58,13 +58,26 @@ export class ProductService {
   }
 
   static async decreaseStock(productId: string, qty: number) {
-    return prisma.product.update({
-      where: { id: productId },
-      data: {
-        stockQty: {
-          decrement: qty
+    return prisma.$transaction(async (tx) => {
+      const product = await tx.product.update({
+        where: { id: productId },
+        data: {
+          stockQty: {
+            decrement: qty
+          }
         }
-      }
+      });
+
+      await AuditService.log({
+        action: 'STOCK_DEDUCTED',
+        refId: productId,
+        meta: {
+          qty,
+          remainingStock: product.stockQty
+        }
+      });
+
+      return product;
     });
   }
 }
