@@ -1,17 +1,16 @@
 import { useState } from "react";
 import api from "../api/client";
+import { useCart } from "../context/CartContext";
 
 export default function Cart() {
-  const stored = localStorage.getItem("cart");
-  const initialCart = stored ? JSON.parse(stored) : [];
+  const { cart, clearCart } = useCart();
 
-  const [cart] = useState(initialCart);
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   const total = cart.reduce(
-    (sum: number, item: any) => sum + item.product.price * item.qty,
+    (sum, item) => sum + item.product.price * item.qty,
     0
   );
 
@@ -21,7 +20,7 @@ export default function Cart() {
 
     try {
       const payload = {
-        items: cart.map((item: any) => ({
+        items: cart.map((item) => ({
           productId: item.product.id,
           qty: item.qty,
         })),
@@ -32,7 +31,7 @@ export default function Cart() {
       setOrderId(res.data.id);
       setStatus("pending");
 
-      localStorage.removeItem("cart");
+      clearCart();
     } catch (err: any) {
       setStatus(err.response?.data?.message || "Order failed");
     } finally {
@@ -48,7 +47,7 @@ export default function Cart() {
         <div>No items in cart</div>
       ) : (
         <>
-          {cart.map((item: any) => (
+          {cart.map((item) => (
             <div key={item.product.id} className="row">
               <span>{item.product.name}</span>
               <span>x{item.qty}</span>
