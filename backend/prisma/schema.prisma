@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // =====================
 // USER
 // =====================
@@ -29,7 +28,6 @@ enum Role {
   owner
 }
 
-
 // =====================
 // PRODUCT
 // =====================
@@ -43,7 +41,6 @@ model Product {
   orderItems OrderItem[]
   movements  StockMovement[]
 }
-
 
 // =====================
 // ORDER
@@ -67,7 +64,6 @@ enum OrderStatus {
   rejected
 }
 
-
 model OrderItem {
   id        String @id @default(cuid())
   orderId   String
@@ -78,7 +74,6 @@ model OrderItem {
   order   Order   @relation(fields: [orderId], references: [id])
   product Product @relation(fields: [productId], references: [id])
 }
-
 
 // =====================
 // PAYMENT SLIP
@@ -99,7 +94,6 @@ enum SlipStatus {
   rejected
 }
 
-
 // =====================
 // STOCK MOVEMENT
 // =====================
@@ -119,7 +113,6 @@ enum MovementType {
   adjustment
 }
 
-
 // =====================
 // FINANCIAL REPORT
 // =====================
@@ -130,4 +123,20 @@ model FinancialReport {
   totalOrders  Int
   netRevenue   Int
   createdAt    DateTime @default(now())
+}
+
+// =====================
+// AUDIT LOG
+// =====================
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  refId     String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([refId])
 }
