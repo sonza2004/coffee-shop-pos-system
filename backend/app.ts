@@ -25,7 +25,7 @@ app.use(morgan('dev'));
 // HEALTH CHECK
 // =====================
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'coffee-shop-pos-api' });
+  res.json({ status: 'ok', service: 'coffee-shop-pos-api', version: '1.0.0' });
 });
 
 // =====================
