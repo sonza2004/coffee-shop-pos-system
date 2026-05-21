@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middlewares/auth.middleware';
+import { PaymentService } from '../../services/payment.service';
 
 const router = Router();
 
@@ -8,16 +9,13 @@ const router = Router();
 // =====================
 router.post('/slip', authenticate, async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, imageUrl } = req.body;
 
-    // TODO:
-    // - handle multipart/form-data upload
-    // - store image URL
-    // - create PaymentSlip record (pending)
+    const slip = await PaymentService.uploadSlip(orderId, imageUrl);
 
     return res.status(201).json({
-      message: 'upload slip placeholder',
-      orderId
+      message: 'slip uploaded',
+      data: slip
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -25,22 +23,17 @@ router.post('/slip', authenticate, async (req, res) => {
 });
 
 // =====================
-// APPROVE PAYMENT (ADMIN ONLY)
+// APPROVE PAYMENT
 // =====================
 router.post('/:id/approve', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO:
-    // - mark slip approved
-    // - update order to paid
-    // - deduct stock
-    // - create stock movement
-    // - update financial report
+    const result = await PaymentService.approvePayment(id);
 
     return res.json({
-      message: 'approve payment placeholder',
-      id
+      message: 'payment approved',
+      data: result
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
@@ -48,17 +41,17 @@ router.post('/:id/approve', authenticate, authorize(['admin']), async (req, res)
 });
 
 // =====================
-// REJECT PAYMENT (ADMIN ONLY)
+// REJECT PAYMENT
 // =====================
 router.post('/:id/reject', authenticate, authorize(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: mark slip rejected, order remains pending or flagged
+    const result = await PaymentService.rejectPayment(id);
 
     return res.json({
-      message: 'reject payment placeholder',
-      id
+      message: 'payment rejected',
+      data: result
     });
   } catch (err: any) {
     return res.status(500).json({ message: err.message });
