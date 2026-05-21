@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// =====================
+// USER
+// =====================
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+
+  orders       Order[]
+}
+
+
+enum Role {
+  admin
+  cashier
+  owner
+}
+
+
+// =====================
+// PRODUCT
+// =====================
+model Product {
+  id        String  @id @default(cuid())
+  name      String
+  price     Int
+  stockQty  Int
+  isActive  Boolean @default(true)
+
+  orderItems OrderItem[]
+  movements  StockMovement[]
+}
+
+
+// =====================
+// ORDER
+// =====================
+model Order {
+  id          String   @id @default(cuid())
+  userId      String
+  totalAmount Int
+  status      OrderStatus @default(pending)
+  createdAt   DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  paymentSlip PaymentSlip?
+}
+
+
+enum OrderStatus {
+  pending
+  paid
+  rejected
+}
+
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  qty       Int
+  price     Int
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+
+// =====================
+// PAYMENT SLIP
+// =====================
+model PaymentSlip {
+  id        String        @id @default(cuid())
+  orderId   String        @unique
+  imageUrl  String
+  status    SlipStatus    @default(pending)
+  uploadedAt DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+enum SlipStatus {
+  pending
+  approved
+  rejected
+}
+
+
+// =====================
+// STOCK MOVEMENT
+// =====================
+model StockMovement {
+  id          String   @id @default(cuid())
+  productId   String
+  changeQty   Int
+  type        MovementType
+  refOrderId  String?
+  createdAt   DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+enum MovementType {
+  sale
+  adjustment
+}
+
+
+// =====================
+// FINANCIAL REPORT
+// =====================
+model FinancialReport {
+  id           String   @id @default(cuid())
+  date         DateTime @unique
+  totalSales   Int
+  totalOrders  Int
+  netRevenue   Int
+  createdAt    DateTime @default(now())
+}
