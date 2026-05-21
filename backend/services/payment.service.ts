@@ -1,5 +1,6 @@
 import prisma from '../config/prisma';
 import { ProductService } from './product.service';
+import { AuditService } from './audit.service';
 
 export class PaymentService {
   static async uploadSlip(orderId: string, imageUrl: string) {
@@ -25,19 +26,16 @@ export class PaymentService {
         throw new Error('Slip already processed');
       }
 
-      // Update slip status
       await tx.paymentSlip.update({
         where: { id: slipId },
         data: { status: 'approved' }
       });
 
-      // Update order status
       await tx.order.update({
         where: { id: slip.orderId },
         data: { status: 'paid' }
       });
 
-      // Deduct stock
       for (const item of slip.order.items) {
         await ProductService.decreaseStock(item.productId, item.qty);
 
@@ -51,14 +49,32 @@ export class PaymentService {
         });
       }
 
+      // =====================
+      // AUDIT LOG
+      // =====================
+      await AuditService.log({
+        action: 'PAYMENT_APPROVED',
+        refId: slipId,
+        meta: {
+          orderId: slip.orderId
+        }
+      });
+
       return { success: true, slipId };
     });
   }
 
   static async rejectPayment(slipId: string) {
-    return prisma.paymentSlip.update({
+    const slip = await prisma.paymentSlip.update({
       where: { id: slipId },
       data: { status: 'rejected' }
     });
+
+    await AuditService.log({
+      action: 'PAYMENT_REJECTED',
+      refId: slipId
+    });
+
+    return slip;
   }
 }
